@@ -1,28 +1,11 @@
 mod kinds;
 
-use std::iter; 
+use std::fmt;
+use std::iter;
 use std::sync::Arc;
 
 #[derive(Debug, Clone, Copy)]
 pub struct SyntaxKind(u16);
-
-#[derive(Debug, Clone)]
-pub enum NodeOrToken<N, T> {
-    Node(N),
-    Token(T),
-}
-
-impl From<Token> for NodeOrToken<Node, Token> {
-    fn from(token: Token) -> NodeOrToken<Node, Token> {
-        NodeOrToken::Token(token)
-    }
-}
-
-impl From<Node> for NodeOrToken<Node, Token> {
-    fn from(node: Node) -> NodeOrToken<Node, Token> {
-        NodeOrToken::Node(node)
-    }
-}
 
 pub type Token = Arc<TokenData>;
 #[derive(Debug)]
@@ -31,12 +14,10 @@ pub struct TokenData {
     text: String,
 }
 
-pub type Node = Arc<NodeData>;
-#[derive(Debug)]
-pub struct NodeData {
-    kind: SyntaxKind,
-    children: Vec<NodeOrToken<Node, Token>>,
-    len: usize,
+impl fmt::Display for TokenData {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.text(), f)
+    }
 }
 
 impl TokenData {
@@ -52,6 +33,23 @@ impl TokenData {
     }
     pub fn text_len(&self) -> usize {
         self.text.len()
+    }
+}
+
+pub type Node = Arc<NodeData>;
+#[derive(Debug)]
+pub struct NodeData {
+    kind: SyntaxKind,
+    children: Vec<NodeOrToken<Node, Token>>,
+    len: usize,
+}
+
+impl fmt::Display for NodeData {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for child in self.children() {
+            fmt::Display::fmt(child, f)?;
+        }
+        Ok(())
     }
 }
 
@@ -81,6 +79,33 @@ impl NodeData {
     }
 }
 
+#[derive(Debug, Clone)]
+pub enum NodeOrToken<N, T> {
+    Node(N),
+    Token(T),
+}
+
+impl From<Token> for NodeOrToken<Node, Token> {
+    fn from(token: Token) -> NodeOrToken<Node, Token> {
+        NodeOrToken::Token(token)
+    }
+}
+
+impl From<Node> for NodeOrToken<Node, Token> {
+    fn from(node: Node) -> NodeOrToken<Node, Token> {
+        NodeOrToken::Node(node)
+    }
+}
+
+impl fmt::Display for NodeOrToken<Node, Token> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            NodeOrToken::Node(node) => fmt::Display::fmt(node, f),
+            NodeOrToken::Token(token) => fmt::Display::fmt(token, f),
+        }
+    }
+}
+
 impl NodeOrToken<Node, Token> {
     pub fn text_len(&self) -> usize {
         match self {
@@ -90,17 +115,30 @@ impl NodeOrToken<Node, Token> {
     }
 }
 
-
 #[test]
 fn smoke() {
     let ws = Arc::new(TokenData::new(kinds::WHITESPACE, " ".to_string()));
     let one = Arc::new(TokenData::new(kinds::INT, "1".to_string()));
-    let plus = Arc::new(TokenData::new(kinds::PLUS, "+".to_string()));
+    let star = Arc::new(TokenData::new(kinds::STAR, "*".to_string()));
     let two = Arc::new(TokenData::new(kinds::INT, "2".to_string()));
 
-    let addtion = Arc::new(NodeData::new(
+    // 1 * 2
+    let multiplication = Arc::new(NodeData::new(
         kinds::BIN_EXPR,
-        vec![one.into(), ws.clone().into(), plus.into(), ws.into(), two.into()],
+        vec![one.into(), ws.clone().into(), star.into(), ws.clone().into(), two.into()],
     ));
-    println!("{:?}", addtion);
+
+    let plus = Arc::new(TokenData::new(kinds::PLUS, "+".to_string()));
+    // 1 * 2 + 1 * 2
+    let addition = Arc::new(NodeData::new(
+        kinds::BIN_EXPR,
+        vec![
+            multiplication.clone().into(),
+            ws.clone().into(),
+            plus.into(),
+            ws.into(),
+            multiplication.into(),
+        ],
+    ));
+    println!("{}", addition);
 }
