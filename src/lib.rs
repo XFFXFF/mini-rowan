@@ -1,23 +1,38 @@
-use std::{iter, sync::Arc};
-
 mod kinds;
 
-#[derive(Clone, Copy)]
+use std::iter; 
+use std::sync::Arc;
+
+#[derive(Debug, Clone, Copy)]
 pub struct SyntaxKind(u16);
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum NodeOrToken<N, T> {
     Node(N),
     Token(T),
 }
 
+impl From<Token> for NodeOrToken<Node, Token> {
+    fn from(token: Token) -> NodeOrToken<Node, Token> {
+        NodeOrToken::Token(token)
+    }
+}
+
+impl From<Node> for NodeOrToken<Node, Token> {
+    fn from(node: Node) -> NodeOrToken<Node, Token> {
+        NodeOrToken::Node(node)
+    }
+}
+
 pub type Token = Arc<TokenData>;
+#[derive(Debug)]
 pub struct TokenData {
     kind: SyntaxKind,
     text: String,
 }
 
 pub type Node = Arc<NodeData>;
+#[derive(Debug)]
 pub struct NodeData {
     kind: SyntaxKind,
     children: Vec<NodeOrToken<Node, Token>>,
@@ -25,6 +40,10 @@ pub struct NodeData {
 }
 
 impl TokenData {
+    pub fn new(kind: SyntaxKind, text: String) -> TokenData {
+        TokenData { kind, text }
+    }
+
     pub fn kind(&self) -> SyntaxKind {
         self.kind
     }
@@ -72,3 +91,16 @@ impl NodeOrToken<Node, Token> {
 }
 
 
+#[test]
+fn smoke() {
+    let ws = Arc::new(TokenData::new(kinds::WHITESPACE, " ".to_string()));
+    let one = Arc::new(TokenData::new(kinds::INT, "1".to_string()));
+    let plus = Arc::new(TokenData::new(kinds::PLUS, "+".to_string()));
+    let two = Arc::new(TokenData::new(kinds::INT, "2".to_string()));
+
+    let addtion = Arc::new(NodeData::new(
+        kinds::BIN_EXPR,
+        vec![one.into(), ws.clone().into(), plus.into(), ws.into(), two.into()],
+    ));
+    println!("{:?}", addtion);
+}
