@@ -1,7 +1,7 @@
-mod kinds;
+pub mod kinds;
 mod green;
 
-pub use green::{Node, NodeData, Token, TokenData};
+pub use green::{GreenNode, GreenNodeData, GreenToken, GreenTokenData};
 
 #[derive(Debug, Clone, Copy)]
 pub struct SyntaxKind(u16);
@@ -16,24 +16,24 @@ pub enum NodeOrToken<N, T> {
 mod tests {
     use std::sync::Arc;
 
-    use crate::{kinds, NodeData, TokenData};
+    use crate::{kinds, GreenNodeData, GreenTokenData};
 
     #[test]
     fn smoke() {
-        let ws = Arc::new(TokenData::new(kinds::WHITESPACE, " ".to_string()));
-        let one = Arc::new(TokenData::new(kinds::INT, "1".to_string()));
-        let star = Arc::new(TokenData::new(kinds::STAR, "*".to_string()));
-        let two = Arc::new(TokenData::new(kinds::INT, "2".to_string()));
+        let ws = Arc::new(GreenTokenData::new(kinds::WHITESPACE, " ".to_string()));
+        let one = Arc::new(GreenTokenData::new(kinds::INT, "1".to_string()));
+        let star = Arc::new(GreenTokenData::new(kinds::STAR, "*".to_string()));
+        let two = Arc::new(GreenTokenData::new(kinds::INT, "2".to_string()));
 
         // 1 * 2
-        let multiplication = Arc::new(NodeData::new(
+        let multiplication = Arc::new(GreenNodeData::new(
             kinds::BIN_EXPR,
             vec![one.into(), ws.clone().into(), star.into(), ws.clone().into(), two.into()],
         ));
 
-        let plus = Arc::new(TokenData::new(kinds::PLUS, "+".to_string()));
+        let plus = Arc::new(GreenTokenData::new(kinds::PLUS, "+".to_string()));
         // 1 * 2 + 1 * 2
-        let addition = Arc::new(NodeData::new(
+        let addition = Arc::new(GreenNodeData::new(
             kinds::BIN_EXPR,
             vec![
                 multiplication.clone().into(),

@@ -4,22 +4,22 @@ use std::sync::Arc;
 
 use crate::{NodeOrToken, SyntaxKind};
 
-pub type Token = Arc<TokenData>;
+pub type GreenToken = Arc<GreenTokenData>;
 #[derive(Debug)]
-pub struct TokenData {
+pub struct GreenTokenData {
     kind: SyntaxKind,
     text: String,
 }
 
-impl fmt::Display for TokenData {
+impl fmt::Display for GreenTokenData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(self.text(), f)
     }
 }
 
-impl TokenData {
-    pub fn new(kind: SyntaxKind, text: String) -> TokenData {
-        TokenData { kind, text }
+impl GreenTokenData {
+    pub fn new(kind: SyntaxKind, text: String) -> GreenTokenData {
+        GreenTokenData { kind, text }
     }
 
     pub fn kind(&self) -> SyntaxKind {
@@ -33,15 +33,15 @@ impl TokenData {
     }
 }
 
-pub type Node = Arc<NodeData>;
+pub type GreenNode = Arc<GreenNodeData>;
 #[derive(Debug)]
-pub struct NodeData {
+pub struct GreenNodeData {
     kind: SyntaxKind,
-    children: Vec<NodeOrToken<Node, Token>>,
+    children: Vec<NodeOrToken<GreenNode, GreenToken>>,
     len: usize,
 }
 
-impl fmt::Display for NodeData {
+impl fmt::Display for GreenNodeData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for child in self.children() {
             fmt::Display::fmt(child, f)?;
@@ -50,10 +50,10 @@ impl fmt::Display for NodeData {
     }
 }
 
-impl NodeData {
-    pub fn new(kind: SyntaxKind, children: Vec<NodeOrToken<Node, Token>>) -> NodeData {
+impl GreenNodeData {
+    pub fn new(kind: SyntaxKind, children: Vec<NodeOrToken<GreenNode, GreenToken>>) -> GreenNodeData {
         let len = children.iter().map(|it| it.text_len()).sum();
-        NodeData { kind, children, len }
+        GreenNodeData { kind, children, len }
     }
 
     pub fn kind(&self) -> SyntaxKind {
@@ -62,33 +62,33 @@ impl NodeData {
     pub fn text_len(&self) -> usize {
         self.len
     }
-    pub fn children(&self) -> &[NodeOrToken<Node, Token>] {
+    pub fn children(&self) -> &[NodeOrToken<GreenNode, GreenToken>] {
         self.children.as_slice()
     }
-    pub fn replace_child(&self, idx: usize, new_child: NodeOrToken<Node, Token>) -> NodeData {
+    pub fn replace_child(&self, idx: usize, new_child: NodeOrToken<GreenNode, GreenToken>) -> GreenNodeData {
         assert!(idx < self.children().len());
 
         let left_children = self.children.iter().take(idx).cloned();
         let right_children = self.children.iter().skip(idx + 1).cloned();
         let new_children =
             left_children.chain(iter::once(new_child)).chain(right_children).collect();
-        NodeData::new(self.kind, new_children)
+        GreenNodeData::new(self.kind, new_children)
     }
 }
 
-impl From<Token> for NodeOrToken<Node, Token> {
-    fn from(token: Token) -> NodeOrToken<Node, Token> {
+impl From<GreenToken> for NodeOrToken<GreenNode, GreenToken> {
+    fn from(token: GreenToken) -> NodeOrToken<GreenNode, GreenToken> {
         NodeOrToken::Token(token)
     }
 }
 
-impl From<Node> for NodeOrToken<Node, Token> {
-    fn from(node: Node) -> NodeOrToken<Node, Token> {
+impl From<GreenNode> for NodeOrToken<GreenNode, GreenToken> {
+    fn from(node: GreenNode) -> NodeOrToken<GreenNode, GreenToken> {
         NodeOrToken::Node(node)
     }
 }
 
-impl fmt::Display for NodeOrToken<Node, Token> {
+impl fmt::Display for NodeOrToken<GreenNode, GreenToken> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             NodeOrToken::Node(node) => fmt::Display::fmt(node, f),
@@ -97,7 +97,7 @@ impl fmt::Display for NodeOrToken<Node, Token> {
     }
 }
 
-impl NodeOrToken<Node, Token> {
+impl NodeOrToken<GreenNode, GreenToken> {
     pub fn text_len(&self) -> usize {
         match self {
             NodeOrToken::Node(it) => it.text_len(),
