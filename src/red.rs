@@ -1,6 +1,6 @@
-use std::rc::Rc;
+use std::{rc::Rc, sync::Arc};
 
-use crate::{GreenNode, GreenToken, SyntaxKind};
+use crate::{GreenNode, GreenToken, NodeOrToken, SyntaxKind};
 
 // Goals:
 //  * .parent()
@@ -17,11 +17,63 @@ impl RedNodeData {
     pub fn new(root: GreenNode) -> RedNode {
         Rc::new(RedNodeData { parent: None, text_offset: 0, green: root })
     }
+    fn green(&self) -> &GreenNode {
+        &self.green
+    }
     pub fn kind(&self) -> SyntaxKind {
-        self.green.kind()
+        self.green().kind()
     }
     pub fn text_len(&self) -> usize {
-        self.green.text_len()
+        self.green().text_len()
+    }
+    pub fn text_offset(&self) -> usize {
+        self.text_offset
+    }
+    pub fn parent(&self) -> Option<&RedNode> {
+        self.parent.as_ref()
+    }
+    pub fn children<'a>(self: &'a RedNode) -> impl Iterator<Item = RedElement> + 'a {
+        let mut offset_in_parent = 0;
+        self.green().children().iter().map(move |green_child| {
+            let text_offset = offset_in_parent + self.text_offset();
+            offset_in_parent += green_child.text_len();
+            match green_child {
+                NodeOrToken::Node(node) => Rc::new(RedNodeData {
+                    parent: Some(Rc::clone(self)),
+                    text_offset,
+                    green: Arc::clone(node),
+                })
+                .into(),
+                NodeOrToken::Token(token) => Rc::new(RedTokenData {
+                    parent: Some(Rc::clone(self)),
+                    text_offset,
+                    green: Arc::clone(token),
+                })
+                .into(),
+            }
+        })
+    }
+}
+
+pub type RedToken = Rc<RedTokenData>;
+pub struct RedTokenData {
+    parent: Option<RedNode>,
+    text_offset: usize,
+    green: GreenToken,
+}
+
+impl RedTokenData {
+    pub fn new(parent: Option<RedNode>, text_offset: usize, green: GreenToken) -> RedToken {
+        Rc::new(RedTokenData { parent, text_offset, green })
+    }
+    fn green(&self) -> &GreenToken {
+        &self.green
+    }
+    pub fn kind(&self) -> SyntaxKind {
+        self.green().kind()
+    }
+    pub fn text_len(&self) -> usize {
+        self.green().text_len()
     }
     pub fn text_offset(&self) -> usize {
         self.text_offset
@@ -31,27 +83,16 @@ impl RedNodeData {
     }
 }
 
-pub type RedToken = Rc<RedTokenData>;
-pub struct RedTokenData {
-    parent: Option<RedToken>,
-    text_offset: usize,
-    green: GreenToken,
+type RedElement = NodeOrToken<RedNode, RedToken>;
+
+impl From<RedNode> for RedElement {
+    fn from(node: RedNode) -> RedElement {
+        NodeOrToken::Node(node)
+    }
 }
 
-impl RedTokenData {
-    pub fn new(parent: Option<RedToken>, text_offset: usize, green: GreenToken) -> RedToken {
-        Rc::new(RedTokenData { parent, text_offset, green })
-    }
-    pub fn kind(&self) -> SyntaxKind {
-        self.green.kind()
-    }
-    pub fn text_len(&self) -> usize {
-        self.green.text_len()
-    }
-    pub fn text_offset(&self) -> usize {
-        self.text_offset
-    }
-    pub fn parent(&self) -> Option<&RedToken> {
-        self.parent.as_ref()
+impl From<RedToken> for RedElement {
+    fn from(token: RedToken) -> RedElement {
+        NodeOrToken::Token(token)
     }
 }
