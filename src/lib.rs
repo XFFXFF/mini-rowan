@@ -1,7 +1,12 @@
 pub mod kinds;
 mod green;
+mod red;
 
-pub use green::{GreenNode, GreenNodeData, GreenToken, GreenTokenData};
+pub use crate::{
+    green::{GreenNode, GreenNodeData, GreenToken, GreenTokenData},
+    red::{RedNode, RedNodeData, RedToken, RedTokenData}
+};
+
 
 #[derive(Debug, Clone, Copy)]
 pub struct SyntaxKind(u16);
