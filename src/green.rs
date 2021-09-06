@@ -44,7 +44,7 @@ pub struct GreenNodeData {
 impl fmt::Display for GreenNodeData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for child in self.children() {
-            fmt::Display::fmt(child, f)?;
+            fmt::Display::fmt(&child, f)?;
         }
         Ok(())
     }
@@ -62,14 +62,14 @@ impl GreenNodeData {
     pub fn text_len(&self) -> usize {
         self.len
     }
-    pub fn children(&self) -> &[NodeOrToken<GreenNode, GreenToken>] {
-        self.children.as_slice()
+    pub fn children(&self) -> impl Iterator<Item = GreenElement> + '_ {
+        self.children.iter().cloned()
     }
     pub fn replace_child(&self, idx: usize, new_child: NodeOrToken<GreenNode, GreenToken>) -> GreenNodeData {
-        assert!(idx < self.children().len());
+        assert!(idx < self.children.len());
 
-        let left_children = self.children.iter().take(idx).cloned();
-        let right_children = self.children.iter().skip(idx + 1).cloned();
+        let left_children = self.children().take(idx);
+        let right_children = self.children().skip(idx + 1);
         let new_children =
             left_children.chain(iter::once(new_child)).chain(right_children).collect();
         GreenNodeData::new(self.kind, new_children)
@@ -105,3 +105,5 @@ impl NodeOrToken<GreenNode, GreenToken> {
         }
     }
 }
+
+type GreenElement = NodeOrToken<GreenNode, GreenToken>;

@@ -1,4 +1,4 @@
-use std::{rc::Rc, sync::Arc};
+use std::rc::Rc;
 
 use crate::{GreenNode, GreenToken, NodeOrToken, SyntaxKind};
 
@@ -34,20 +34,20 @@ impl RedNodeData {
     }
     pub fn children<'a>(self: &'a RedNode) -> impl Iterator<Item = RedElement> + 'a {
         let mut offset_in_parent = 0;
-        self.green().children().iter().map(move |green_child| {
+        self.green().children().map(move |green_child| {
             let text_offset = offset_in_parent + self.text_offset();
             offset_in_parent += green_child.text_len();
             match green_child {
                 NodeOrToken::Node(node) => Rc::new(RedNodeData {
                     parent: Some(Rc::clone(self)),
                     text_offset,
-                    green: Arc::clone(node),
+                    green: node,
                 })
                 .into(),
                 NodeOrToken::Token(token) => Rc::new(RedTokenData {
                     parent: Some(Rc::clone(self)),
                     text_offset,
-                    green: Arc::clone(token),
+                    green: token,
                 })
                 .into(),
             }
