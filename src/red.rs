@@ -1,4 +1,5 @@
 use std::rc::Rc;
+use std::fmt;
 
 use crate::{GreenNode, GreenToken, NodeOrToken, SyntaxKind};
 
@@ -11,6 +12,12 @@ pub struct RedNodeData {
     parent: Option<RedNode>,
     text_offset: usize,
     green: GreenNode,
+}
+
+impl fmt::Display for RedNodeData {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.green(), f)
+    }
 }
 
 impl RedNodeData {
@@ -60,6 +67,12 @@ pub struct RedTokenData {
     parent: Option<RedNode>,
     text_offset: usize,
     green: GreenToken,
+}
+
+impl fmt::Display for RedTokenData {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.green(), f)
+    }
 }
 
 impl RedTokenData {

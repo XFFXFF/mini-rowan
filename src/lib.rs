@@ -36,7 +36,7 @@ impl<N, T> NodeOrToken<N, T> {
 mod tests {
     use std::sync::Arc;
 
-    use crate::{kinds, GreenNodeData, GreenTokenData};
+    use crate::{GreenNodeData, GreenTokenData, RedNodeData, kinds};
 
     #[test]
     fn smoke() {
@@ -65,8 +65,15 @@ mod tests {
         ));
         println!("{}", addition);
 
+        // let mul2 = addition.children().nth(4).unwrap().into_node().unwrap();
+        // let one = mul2.children().nth(0).unwrap().into_token().unwrap();
+        // println!("{}", one);
+
+        let addition = RedNodeData::new(addition);
         let mul2 = addition.children().nth(4).unwrap().into_node().unwrap();
-        let one = mul2.children().nth(0).unwrap().into_token().unwrap();
-        println!("{}", one);
+        let one2 = mul2.children().nth(0).unwrap().into_token().unwrap();
+        
+        let p = one2.parent().unwrap();
+        println!("{}", p);
     }
 }
