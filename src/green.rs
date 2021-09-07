@@ -51,7 +51,10 @@ impl fmt::Display for GreenNodeData {
 }
 
 impl GreenNodeData {
-    pub fn new(kind: SyntaxKind, children: Vec<NodeOrToken<GreenNode, GreenToken>>) -> GreenNodeData {
+    pub fn new(
+        kind: SyntaxKind,
+        children: Vec<NodeOrToken<GreenNode, GreenToken>>,
+    ) -> GreenNodeData {
         let len = children.iter().map(|it| it.text_len()).sum();
         GreenNodeData { kind, children, len }
     }
@@ -65,7 +68,11 @@ impl GreenNodeData {
     pub fn children(&self) -> impl Iterator<Item = GreenElement> + '_ {
         self.children.iter().cloned()
     }
-    pub fn replace_child(&self, idx: usize, new_child: NodeOrToken<GreenNode, GreenToken>) -> GreenNodeData {
+    pub fn replace_child(
+        &self,
+        idx: usize,
+        new_child: NodeOrToken<GreenNode, GreenToken>,
+    ) -> GreenNodeData {
         assert!(idx < self.children.len());
 
         let left_children = self.children().take(idx);
@@ -106,4 +113,4 @@ impl NodeOrToken<GreenNode, GreenToken> {
     }
 }
 
-type GreenElement = NodeOrToken<GreenNode, GreenToken>;
+pub type GreenElement = NodeOrToken<GreenNode, GreenToken>;

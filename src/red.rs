@@ -1,7 +1,7 @@
-use std::rc::Rc;
 use std::fmt;
+use std::{rc::Rc, sync::Arc};
 
-use crate::{GreenNode, GreenToken, NodeOrToken, SyntaxKind};
+use crate::{GreenElement, GreenNode, GreenToken, NodeOrToken, SyntaxKind};
 
 // Goals:
 //  * .parent()
@@ -11,6 +11,7 @@ pub type RedNode = Rc<RedNodeData>;
 pub struct RedNodeData {
     parent: Option<RedNode>,
     text_offset: usize,
+    index_in_parent: usize,
     green: GreenNode,
 }
 
@@ -22,7 +23,7 @@ impl fmt::Display for RedNodeData {
 
 impl RedNodeData {
     pub fn new(root: GreenNode) -> RedNode {
-        Rc::new(RedNodeData { parent: None, text_offset: 0, green: root })
+        Rc::new(RedNodeData { parent: None, text_offset: 0, index_in_parent: 0, green: root })
     }
     fn green(&self) -> &GreenNode {
         &self.green
@@ -41,13 +42,14 @@ impl RedNodeData {
     }
     pub fn children<'a>(self: &'a RedNode) -> impl Iterator<Item = RedElement> + 'a {
         let mut offset_in_parent = 0;
-        self.green().children().map(move |green_child| {
+        self.green().children().enumerate().map(move |(index_in_parent, green_child)| {
             let text_offset = offset_in_parent + self.text_offset();
             offset_in_parent += green_child.text_len();
             match green_child {
                 NodeOrToken::Node(node) => Rc::new(RedNodeData {
                     parent: Some(Rc::clone(self)),
                     text_offset,
+                    index_in_parent,
                     green: node,
                 })
                 .into(),
@@ -59,6 +61,16 @@ impl RedNodeData {
                 .into(),
             }
         })
+    }
+    pub fn replace_child(self: &RedNode, idx: usize, new_child: GreenElement) -> RedNode {
+        let new_green = self.green().replace_child(idx, new_child);
+        self.replace_ourselves(Arc::new(new_green))
+    }
+    fn replace_ourselves(self: &RedNode, new_green: GreenNode) -> RedNode {
+        match self.parent() {
+            Some(parent) => parent.replace_child(self.index_in_parent, new_green.into()),
+            None => RedNodeData::new(new_green),
+        }
     }
 }
 

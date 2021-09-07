@@ -3,10 +3,9 @@ mod green;
 mod red;
 
 pub use crate::{
-    green::{GreenNode, GreenNodeData, GreenToken, GreenTokenData},
-    red::{RedNode, RedNodeData, RedToken, RedTokenData}
+    green::{GreenElement, GreenNode, GreenNodeData, GreenToken, GreenTokenData},
+    red::{RedNode, RedNodeData, RedToken, RedTokenData},
 };
-
 
 #[derive(Debug, Clone, Copy)]
 pub struct SyntaxKind(u16);
@@ -23,7 +22,7 @@ impl<N, T> NodeOrToken<N, T> {
             NodeOrToken::Node(node) => Some(node),
             NodeOrToken::Token(_) => None,
         }
-    }    
+    }
     pub fn into_token(self) -> Option<T> {
         match self {
             NodeOrToken::Node(_) => None,
@@ -36,7 +35,7 @@ impl<N, T> NodeOrToken<N, T> {
 mod tests {
     use std::sync::Arc;
 
-    use crate::{GreenNodeData, GreenTokenData, RedNodeData, kinds};
+    use crate::{kinds, GreenNodeData, GreenTokenData, RedNodeData};
 
     #[test]
     fn smoke() {
@@ -72,8 +71,13 @@ mod tests {
         let addition = RedNodeData::new(addition);
         let mul2 = addition.children().nth(4).unwrap().into_node().unwrap();
         let one2 = mul2.children().nth(0).unwrap().into_token().unwrap();
-        
+
+        println!("\n{} at {}", one2, one2.text_offset());
         let p = one2.parent().unwrap();
         println!("{}", p);
+
+        let three = Arc::new(GreenTokenData::new(kinds::INT, "3".to_string()));
+        let addtion_root = mul2.replace_child(0, three.into());
+        println!("{}", addtion_root);
     }
 }
