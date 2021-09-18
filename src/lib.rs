@@ -1,3 +1,15 @@
+/*
+Requirements:
+
+* full-fidelity (whitespace & comments are part of the tree)
+* resilient & semi-structured (can represent invalid code)
+* cheaply updatable (for refactors & increamental reparsing)
+* conveniently updatable
+
+* immutable value-type
+* easy to navigate (go from node to children, parent, siblings)
+ */
+
 pub mod kinds;
 mod green;
 mod red;
