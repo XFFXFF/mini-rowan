@@ -13,6 +13,7 @@ Requirements:
 pub mod kinds;
 mod green;
 mod red;
+mod ast;
 
 pub use crate::{
     green::{GreenElement, GreenNode, GreenNodeData, GreenToken, GreenTokenData},
