@@ -20,7 +20,7 @@ fn make_field(name: &str, ty: &str) -> GreenNode {
         kinds::FIELD,
         vec![
             make_whitespace("    ").into(),
-            make_token(kinds::IDENT, name).into(),
+            make_name(name).into(),
             make_token(kinds::COLON, ":").into(),
             make_whitespace(" ").into(),
             make_node(kinds::TYPE, vec![make_token(kinds::IDENT, ty).into()]).into(),
@@ -30,11 +30,15 @@ fn make_field(name: &str, ty: &str) -> GreenNode {
     ))
 }
 
+fn make_name(name: &str) -> GreenNode {
+    make_node(kinds::NAME, vec![make_token(kinds::IDENT, name).into()])
+}
+
 fn make_struct(name: &str, fields: Vec<GreenNode>) -> GreenNode {
     let mut children: Vec<GreenElement> = Vec::new();
     children.push(make_token(kinds::STRUCT_KW, "struct").into());
     children.push(make_whitespace(" ").into());
-    children.push(make_token(kinds::IDENT, name).into());
+    children.push(make_name(name).into());
     children.push(make_whitespace(" ").into());
     children.push(make_token(kinds::L_CURLY, "{").into());
     children.push(make_whitespace("\n").into());
@@ -46,5 +50,5 @@ fn make_struct(name: &str, fields: Vec<GreenNode>) -> GreenNode {
 #[test]
 fn test_struct() {
     let strukt = make_struct("Foo", vec![make_field("foo", "String"), make_field("bar", "Int")]);
-    println!("{}", strukt);
+    println!("{:#?}", strukt);
 }
