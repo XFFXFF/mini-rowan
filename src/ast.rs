@@ -41,7 +41,7 @@ impl AstNode for Field {
 struct Name(RedNode);
 impl AstNode for Name {
     fn cast(node: RedNode) -> Option<Self> where Self: Sized {
-        if node.kind() == kinds::FIELD {
+        if node.kind() == kinds::NAME {
             Some(Name(node))
         } else {
             None
@@ -97,6 +97,6 @@ fn make_struct(name: &str, fields: Vec<GreenNode>) -> GreenNode {
 fn test_struct() {
     let strukt = make_struct("Foo", vec![make_field("foo", "String"), make_field("bar", "Int")]);
     let strukt = Struct::cast(RedNodeData::new(strukt)).unwrap();
-    println!("{}", strukt.0);
+   println!("{}", strukt.0);
     println!("{}", strukt.name().unwrap().0);
 }
