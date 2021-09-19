@@ -17,10 +17,10 @@ mod ast;
 
 pub use crate::{
     green::{GreenElement, GreenNode, GreenNodeData, GreenToken, GreenTokenData},
-    red::{RedNode, RedNodeData, RedToken, RedTokenData},
+    red::{RedElement, RedNode, RedNodeData, RedToken, RedTokenData},
 };
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct SyntaxKind(u16);
 
 #[derive(Debug, Clone)]

@@ -2,6 +2,52 @@ use std::sync::Arc;
 
 use crate::kinds;
 use crate::{GreenElement, GreenNode, GreenNodeData, GreenToken, GreenTokenData, SyntaxKind};
+use crate::{RedNode, RedElement, RedNodeData};
+
+trait AstNode {
+    fn cast(node: RedNode) -> Option<Self> where Self: Sized;
+}
+
+struct Struct(RedNode);
+impl AstNode for Struct {
+    fn cast(node: RedNode) -> Option<Self> where Self: Sized {
+        if node.kind() == kinds::STRUCT {
+            Some(Struct(node))
+        } else {
+            None
+        }
+    }
+}
+
+impl Struct {
+    fn name(&self) -> Option<Name> {
+        self.0.children()
+            .filter_map(RedElement::into_node)
+            .find_map(Name::cast)
+    }
+}
+
+struct Field(RedNode);
+impl AstNode for Field {
+    fn cast(node: RedNode) -> Option<Self> where Self: Sized {
+        if node.kind() == kinds::FIELD {
+            Some(Field(node))
+        } else {
+            None
+        }
+    }
+}
+
+struct Name(RedNode);
+impl AstNode for Name {
+    fn cast(node: RedNode) -> Option<Self> where Self: Sized {
+        if node.kind() == kinds::FIELD {
+            Some(Name(node))
+        } else {
+            None
+        }
+    }
+}
 
 fn make_token(kind: SyntaxKind, text: &str) -> GreenToken {
     Arc::new(GreenTokenData::new(kind, text.to_string()))
@@ -50,5 +96,7 @@ fn make_struct(name: &str, fields: Vec<GreenNode>) -> GreenNode {
 #[test]
 fn test_struct() {
     let strukt = make_struct("Foo", vec![make_field("foo", "String"), make_field("bar", "Int")]);
-    println!("{:#?}", strukt);
+    let strukt = Struct::cast(RedNodeData::new(strukt)).unwrap();
+    println!("{}", strukt.0);
+    println!("{}", strukt.name().unwrap().0);
 }

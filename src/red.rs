@@ -108,7 +108,7 @@ impl RedTokenData {
     }
 }
 
-type RedElement = NodeOrToken<RedNode, RedToken>;
+pub type RedElement = NodeOrToken<RedNode, RedToken>;
 
 impl From<RedNode> for RedElement {
     fn from(node: RedNode) -> RedElement {
