@@ -6,6 +6,12 @@ use crate::{RedNode, RedElement, RedNodeData};
 
 trait AstNode {
     fn cast(node: RedNode) -> Option<Self> where Self: Sized;
+
+    fn syntax(&self) -> &RedNode;
+
+    fn child_of_type<C: AstNode>(&self) -> Option<C> {
+        self.syntax().children().filter_map(RedElement::into_node).find_map(C::cast)
+    }
 }
 
 struct Struct(RedNode);
@@ -17,16 +23,23 @@ impl AstNode for Struct {
             None
         }
     }
+
+    fn syntax(&self) -> &RedNode {
+        &self.0
+    }
 }
 
 impl Struct {
     fn name(&self) -> Option<Name> {
-        self.0.children()
-            .filter_map(RedElement::into_node)
-            .find_map(Name::cast)
+        self.child_of_type()
+    }
+
+    fn fields(&self) -> impl Iterator<Item = Field> + '_ {
+        self.syntax().children().filter_map(RedElement::into_node).filter_map(Field::cast)
     }
 }
 
+#[derive(Debug)]
 struct Field(RedNode);
 impl AstNode for Field {
     fn cast(node: RedNode) -> Option<Self> where Self: Sized {
@@ -35,6 +48,16 @@ impl AstNode for Field {
         } else {
             None
         }
+    }
+
+    fn syntax(&self) -> &RedNode {
+        &self.0
+    }
+}
+
+impl Field {
+    fn name(&self) -> Option<Name> {
+        self.child_of_type()
     }
 }
 
@@ -46,6 +69,10 @@ impl AstNode for Name {
         } else {
             None
         }
+    }
+
+    fn syntax(&self) -> &RedNode {
+        &self.0
     }
 }
 
@@ -97,6 +124,9 @@ fn make_struct(name: &str, fields: Vec<GreenNode>) -> GreenNode {
 fn test_struct() {
     let strukt = make_struct("Foo", vec![make_field("foo", "String"), make_field("bar", "Int")]);
     let strukt = Struct::cast(RedNodeData::new(strukt)).unwrap();
-   println!("{}", strukt.0);
-    println!("{}", strukt.name().unwrap().0);
+    println!("{}", strukt.syntax());
+    println!("{}", strukt.name().unwrap().syntax());
+    let fields = strukt.fields().collect::<Vec<Field>>();
+    let foo_field = fields.first().unwrap();
+    println!("{}", foo_field.name().unwrap().syntax());
 }
