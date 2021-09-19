@@ -2,10 +2,12 @@ use std::sync::Arc;
 
 use crate::kinds;
 use crate::{GreenElement, GreenNode, GreenNodeData, GreenToken, GreenTokenData, SyntaxKind};
-use crate::{RedNode, RedElement, RedNodeData};
+use crate::{RedElement, RedNode, RedNodeData};
 
 trait AstNode {
-    fn cast(node: RedNode) -> Option<Self> where Self: Sized;
+    fn cast(node: RedNode) -> Option<Self>
+    where
+        Self: Sized;
 
     fn syntax(&self) -> &RedNode;
 
@@ -16,7 +18,10 @@ trait AstNode {
 
 struct Struct(RedNode);
 impl AstNode for Struct {
-    fn cast(node: RedNode) -> Option<Self> where Self: Sized {
+    fn cast(node: RedNode) -> Option<Self>
+    where
+        Self: Sized,
+    {
         if node.kind() == kinds::STRUCT {
             Some(Struct(node))
         } else {
@@ -39,10 +44,12 @@ impl Struct {
     }
 }
 
-#[derive(Debug)]
 struct Field(RedNode);
 impl AstNode for Field {
-    fn cast(node: RedNode) -> Option<Self> where Self: Sized {
+    fn cast(node: RedNode) -> Option<Self>
+    where
+        Self: Sized,
+    {
         if node.kind() == kinds::FIELD {
             Some(Field(node))
         } else {
@@ -63,7 +70,10 @@ impl Field {
 
 struct Name(RedNode);
 impl AstNode for Name {
-    fn cast(node: RedNode) -> Option<Self> where Self: Sized {
+    fn cast(node: RedNode) -> Option<Self>
+    where
+        Self: Sized,
+    {
         if node.kind() == kinds::NAME {
             Some(Name(node))
         } else {
